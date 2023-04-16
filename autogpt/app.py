@@ -17,6 +17,7 @@ from autogpt.commands.file_operations import (
     read_file,
     search_files,
     write_to_file,
+    edit_line
 )
 from autogpt.json_fixes.parsing import fix_and_parse_json
 from autogpt.memory import get_memory
@@ -158,6 +159,8 @@ def execute_command(command_name: str, arguments):
             return append_to_file(arguments["file"], arguments["text"])
         elif command_name == "delete_file":
             return delete_file(arguments["file"])
+        elif command_name == "edit_line":
+            return edit_line(arguments["file"], arguments["line_number"], arguments["action"], arguments["old_text"], arguments["new_text"])
         elif command_name == "search_files":
             return search_files(arguments["directory"])
         elif command_name == "browse_website":
