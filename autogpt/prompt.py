@@ -68,6 +68,13 @@ def get_prompt() -> str:
         ("Read file", "read_file", {"file": "<file>"}),
         ("Append to file", "append_to_file", {"file": "<file>", "text": "<text>"}),
         ("Delete file", "delete_file", {"file": "<file>"}),
+        (
+            "Edit File by line number",
+            "edit_line",
+            {"file": "<file>", "line_number": "<line_number>",
+            "action": "<'add', 'insert', 'modify', 'replace', 'delete'>",
+            "old_text": "<old_text>", "new_text": "<new_text>"}
+        )
         ("Search Files", "search_files", {"directory": "<directory>"}),
         ("Evaluate Code", "evaluate_code", {"code": "<full_code_string>"}),
         (
