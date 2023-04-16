@@ -1,6 +1,5 @@
 """Agent manager for managing GPT agents"""
-from __future__ import annotations
-
+from typing import List, Tuple, Union
 from autogpt.llm_utils import create_chat_completion
 from autogpt.config.config import Singleton
 
@@ -15,7 +14,7 @@ class AgentManager(metaclass=Singleton):
     # Create new GPT agent
     # TODO: Centralise use of create_chat_completion() to globally enforce token limit
 
-    def create_agent(self, task: str, prompt: str, model: str) -> tuple[int, str]:
+    def create_agent(self, task: str, prompt: str, model: str) -> Tuple[int, str]:
         """Create a new agent and return its key
 
         Args:
@@ -48,7 +47,7 @@ class AgentManager(metaclass=Singleton):
 
         return key, agent_reply
 
-    def message_agent(self, key: str | int, message: str) -> str:
+    def message_agent(self, key: Union[str, int], message: str) -> str:
         """Send a message to an agent and return its response
 
         Args:
@@ -58,7 +57,10 @@ class AgentManager(metaclass=Singleton):
         Returns:
             The agent's response
         """
-        task, messages, model = self.agents[int(key)]
+        try:
+            task, messages, model = self.agents[int(key)]
+        except KeyError:
+            return f"KeyError {key} is unknown. Current list of agents: {self.list_agents()}"
 
         # Add user message to message history before sending to agent
         messages.append({"role": "user", "content": message})
@@ -74,7 +76,7 @@ class AgentManager(metaclass=Singleton):
 
         return agent_reply
 
-    def list_agents(self) -> list[tuple[str | int, str]]:
+    def list_agents(self) -> List[Tuple[Union[str, int], str]]:
         """Return a list of all agents
 
         Returns:
