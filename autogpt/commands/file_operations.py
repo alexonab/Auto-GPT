@@ -235,3 +235,78 @@ def search_files(directory: str) -> List[str]:
             found_files.append(relative_path)
 
     return found_files
+
+def edit_line(filename, line_numbers, action, old_text=None, new_text=None, debug=True):
+    """
+    Insert, modify, or delete one or more lines of a file.
+
+    Args:
+        filename (str): The name of the file to be edited.
+        line_numbers (int or list): The line number(s) of the line(s) to be edited. If 'start' is provided, the line number is assumed to be 1.
+        action (str): The action to be taken on the line. Must be one of 'insert', 'modify', or 'delete'.
+        new_text (str): The new text to insert or replace the old text with. Required for 'insert' and 'modify' actions.
+        old_text (str): The old text to be replaced. Required for 'modify' action.
+        debug (bool): Whether to output a diff of the old and new content of the file after the edit has been made.
+
+    Returns:
+        str: A message indicating success or failure.
+    """
+
+    actions = ['add', 'insert', 'modify', 'replace', 'delete']
+
+    filepath = safe_join(WORKING_DIRECTORY, filename)
+    if not os.path.isfile(filepath):
+        return f"Error: File '{filepath}' does not exist."
+
+    if not isinstance(line_numbers, str):
+        return "Error: Invalid line number(s) provided."
+
+    if action not in actions:
+        return f"Error: Invalid action. Must be one of {actions}."
+
+    if action in ['add', 'replace', 'insert', 'modify'] and new_text is None:
+        return f"Error: new_text must be provided for 'add', 'insert' and 'modify' actions."
+
+    if action in ['replace', 'modify'] and old_text is None:
+        return "Error: old_text must be provided for 'modify' action."
+
+    try:
+        if "," in line_numbers:
+            line_numbers = list(map(int, line_numbers.split(",")))
+        else:
+            line_numbers = [int(line_numbers)]
+    except ValueError:
+        return "Error: Invalid line number(s) format. Must be an int or a list of ints."
+
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+    
+    original_lines = lines.copy()
+
+    for line_number in line_numbers:
+        if line_number < 1 or line_number > len(lines):
+            return f"Error: Line number {line_number} is out of range."
+
+        if action in  ['add', 'insert']:
+            lines.insert(line_number - 1, new_text + '\n')
+        elif action in ['replace', 'modify']:
+            if old_text not in lines[line_number - 1]:
+                return f"Error: old_text '{old_text}' not found on line {line_number} '{lines[line_number - 1]}'."
+            lines[line_number - 1] = lines[line_number - 1].replace(old_text, new_text)
+        elif action == 'delete':
+            lines.pop(line_number - 1)
+
+    with open(filepath + '.bak', 'w') as backup:
+        backup.writelines(original_lines)
+
+    with open(filepath, 'w') as f:
+        f.writelines(lines)
+
+    if debug:
+        with open(filepath, 'r') as f:
+            new_lines = f.readlines()
+
+        diff = difflib.unified_diff(original_lines, new_lines, lineterm='')
+        print("\n".join(list(diff)))
+
+    return f"File: {filename}, Action: {action.capitalize()}, Result: {'Success.' if original_lines != lines else 'No changes made'}"
